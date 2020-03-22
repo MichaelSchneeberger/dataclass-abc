@@ -28,14 +28,14 @@ class B(A):
 
 ## Example
 
-The [example](https://github.com/MichaelSchneeberger/daataclass-abc/example)
+The [example](https://github.com/MichaelSchneeberger/dataclass-abc/tree/master/example)
 takes some code snippets from https://realpython.com/python-data-classes/ and
 implements them with abstract properties.
 
 ## Design pattern
 
 This library suggests the design pattern as implemented in the 
-[example](https://github.com/MichaelSchneeberger/daataclass-abc/example):
+[example](https://github.com/MichaelSchneeberger/dataclass-abc/tree/master/example):
 
 - **mixins** - a mixin is an abstract class that implements data as abstract
 properties and methods based on the abstract properties.
