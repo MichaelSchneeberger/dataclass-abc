@@ -37,14 +37,14 @@ implements them with abstract properties.
 This library suggests the design pattern as implemented in the 
 [example](https://github.com/MichaelSchneeberger/dataclass-abc/tree/master/example):
 
-- **mixins** - a mixin is an abstract class that implements data as abstract
+- **mixins** - a *mixin* is an abstract class that implements data as abstract
 properties and methods based on the abstract properties.
 - **classes** - an abstract class inherits from one or more mixins
 (see `City` or `CapitalCity` in the example). This class is used for pattern matching,
 e.g. using `isinstance` method.
-- **impl** - an implementation class implements the abstract properties. 
+- **impl** - an *implementation class* implements the abstract properties. 
 (see `CityImpl` or `CapitalCityImpl` in the example). This class is decorated with
 `dataclass` and `resolve_abc_prop` and should always be called through an 
-initialize function.
-- **init** - initialize functions (or constructor functions) initialize an 
-implementation class.
+*initialize function*.
+- **init** - an *initialize function* (or *constructor function*) initializes an 
+*implementation class*.
