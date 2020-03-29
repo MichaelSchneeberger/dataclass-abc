@@ -1,6 +1,6 @@
 # Dataclass ABC
 
-Library that lets you define abstract properties in dataclasses. 
+Library that lets you define abstract properties for dataclasses. 
 
 ## Installation
 
@@ -8,11 +8,15 @@ Library that lets you define abstract properties in dataclasses.
 
 ## Usage
 
+The `dataclass_abc` class decorator:
+
+* erases the default value of the fields (see comment below)
+* resolves the abstract properties overwritten by a field
+
 ``` python
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
-from dataclass_abc import resolve_abc_prop
+from dataclass_abc import dataclass_abc
 
 class A(ABC):
     @property
@@ -20,10 +24,43 @@ class A(ABC):
     def val(self) -> str:
         ...
 
-@resolve_abc_prop
-@dataclass
+@dataclass_abc
 class B(A):
-    val: str
+    val: str        # overwrites the abstract property 'val' in 'A'git
+```
+
+### Erase default value
+
+`dataclass_abc` erases the default values of fields. This has the advantage that
+additional fields that do not refer to an abstract property can be added
+without running into the "*non-default argument follows default argument*" 
+exception.
+
+Instead, work with *initialize functions* when dealing with default values 
+(see Design Pattern below).
+
+``` python
+from abc import ABC, abstractmethod
+
+from dataclass_abc import dataclass_abc
+
+class A(ABC):
+    @property
+    @abstractmethod
+    def val1(self) -> str:
+        ...
+
+@dataclass_abc
+class B(A):
+    val1: str
+    val2: str
+
+# work with initialize functions when dealing with default values
+def init_b(
+    val1: str,
+    val2: str = 'default',
+):
+    return B(val1=val1, val2=val2)
 ```
 
 ## Example
@@ -44,7 +81,7 @@ properties and methods based on the abstract properties.
 e.g. using `isinstance` method.
 - **impl** - an *implementation class* implements the abstract properties. 
 (see `CityImpl` or `CapitalCityImpl` in the example). This class is decorated with
-`dataclass` and `resolve_abc_prop` and should always be called through an 
+`dataclass_abc` and `resolve_abc_prop` and should always be called through an 
 *initialize function*.
 - **init** - an *initialize function* (or *constructor function*) initializes an 
 *implementation class*.

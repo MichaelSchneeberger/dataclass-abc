@@ -1,11 +1,8 @@
-from dataclasses import dataclass
-
-from dataclass_abc import resolve_abc_prop
+from dataclass_abc import dataclass_abc
 from example.capitalcity import CapitalCity
 
 
-@resolve_abc_prop
-@dataclass
+@dataclass_abc
 class CapitalCityImpl(CapitalCity):
     city_name: str
     lon: float
