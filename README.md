@@ -26,7 +26,7 @@ class A(ABC):
 
 @dataclass_abc
 class B(A):
-    val: str        # overwrites the abstract property 'val' in 'A'git
+    val: str        # overwrites the abstract property 'val' in 'A'
 ```
 
 ### Erase default value
@@ -36,8 +36,8 @@ additional fields that do not refer to an abstract property can be added
 without running into the "*non-default argument follows default argument*" 
 exception.
 
-Instead, work with *initialize functions* when dealing with default values 
-(see Design Pattern below).
+Therefore, do not define default values, work with *initialize functions* 
+instead (see Design Pattern below).
 
 ``` python
 from abc import ABC, abstractmethod
@@ -66,8 +66,8 @@ def init_b(
 ## Example
 
 The [example](https://github.com/MichaelSchneeberger/dataclass-abc/tree/master/example)
-takes some code snippets from https://realpython.com/python-data-classes/ and
-implements them with abstract properties.
+implements the code snippets taken from [RealPython](https://realpython.com/python-data-classes/)
+ with abstract properties.
 
 ## Design pattern
 
