@@ -24,7 +24,7 @@ class A(ABC):
     def val(self) -> str:
         ...
 
-@dataclass_abc
+@dataclass_abc(frozen=True)
 class B(A):
     val: str        # overwrites the abstract property 'val' in 'A'
 ```
@@ -50,7 +50,7 @@ class A(ABC):
     def val1(self) -> str:
         ...
 
-@dataclass_abc
+@dataclass_abc(frozen=True)
 class B(A):
     val1: str
     val2: str

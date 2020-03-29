@@ -48,7 +48,7 @@ def resolve_abc_prop(cls):
     return new_cls
 
 
-def dataclass_abc(cls, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False):
+def dataclass_abc(_cls=None, *, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False):
     """
     meant to be used as a class decorator similarly to `dataclasses.dataclass_abc`.
 
@@ -59,43 +59,52 @@ def dataclass_abc(cls, repr=True, eq=True, order=False, unsafe_hash=False, froze
 
     """
 
-    if cls.__module__ in sys.modules:
-        globals = sys.modules[cls.__module__].__dict__
-    else:
-        # Theoretically this can happen if someone writes
-        # a custom string to cls.__module__.  In which case
-        # such dataclass_abc won't be fully introspectable
-        # (w.r.t. typing.get_type_hints) but will still function
-        # correctly.
-        globals = {}
+    def wrap(cls):
+        if cls.__module__ in sys.modules:
+            globals = sys.modules[cls.__module__].__dict__
+        else:
+            # Theoretically this can happen if someone writes
+            # a custom string to cls.__module__.  In which case
+            # such dataclass_abc won't be fully introspectable
+            # (w.r.t. typing.get_type_hints) but will still function
+            # correctly.
+            globals = {}
 
-    cls = parent_dataclass(cls, init=False, repr=repr, eq=eq, order=order, unsafe_hash=unsafe_hash, frozen=frozen)
+        cls = parent_dataclass(cls, init=False, repr=repr, eq=eq, order=order, unsafe_hash=unsafe_hash, frozen=frozen)
 
-    fields = cls.__dict__['__dataclass_fields__']
+        fields = cls.__dict__['__dataclass_fields__']
 
-    def gen_fields():
-        for field in fields.values():
-            # Include InitVars and regular fields (so, not ClassVars).
-            if field._field_type in (_FIELD, _FIELD_INITVAR):
-                field.default = MISSING
-                field.default_factory = MISSING
-                yield field
+        def gen_fields():
+            for field in fields.values():
+                # Include InitVars and regular fields (so, not ClassVars).
+                if field._field_type in (_FIELD, _FIELD_INITVAR):
+                    field.default = MISSING
+                    field.default_factory = MISSING
+                    yield field
 
-    flds = list(gen_fields())
+        flds = list(gen_fields())
 
-    # Does this class have a post-init function?
-    has_post_init = hasattr(cls, _POST_INIT_NAME)
+        # Does this class have a post-init function?
+        has_post_init = hasattr(cls, _POST_INIT_NAME)
 
-    _set_new_attribute(cls, '__init__',
-                       _init_fn(flds,
-                                frozen,
-                                has_post_init,
-                                # The name to use for the "self"
-                                # param in __init__.  Use "self"
-                                # if possible.
-                                '__dataclass_self__' if 'self' in fields
-                                        else 'self',
-                                globals,
-                      ))
+        _set_new_attribute(cls, '__init__',
+                           _init_fn(flds,
+                                    frozen,
+                                    has_post_init,
+                                    # The name to use for the "self"
+                                    # param in __init__.  Use "self"
+                                    # if possible.
+                                    '__dataclass_self__' if 'self' in fields
+                                            else 'self',
+                                    globals,
+                          ))
 
-    return resolve_abc_prop(cls)
+        return resolve_abc_prop(cls)
+
+    # See if we're being called as @dataclass or @dataclass().
+    if _cls is None:
+        # We're called with parens.
+        return wrap
+
+    # We're called as @dataclass without parens.
+    return wrap(_cls)
