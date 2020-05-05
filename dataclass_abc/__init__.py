@@ -1,10 +1,17 @@
 import sys
-from dataclasses import dataclass as parent_dataclass, MISSING, _POST_INIT_NAME, _FIELD, _FIELD_INITVAR, \
-    _set_new_attribute, _init_fn
+from dataclasses import _FIELD  # type: ignore
+from dataclasses import _FIELD_INITVAR  # type: ignore
+from dataclasses import _POST_INIT_NAME  # type: ignore
+from dataclasses import _init_fn  # type: ignore
+from dataclasses import _set_new_attribute  # type: ignore
+from dataclasses import dataclass as parent_dataclass, MISSING
+from typing import Generator, Tuple, Any, TypeVar
+
+T = TypeVar('T')
 
 
-def resolve_abc_prop(cls):
-    def gen_properties():
+def resolve_abc_prop(cls: T) -> T:
+    def gen_properties() -> Generator[Tuple[str, Any], None, None]:
         """ search abstract properties in super classes """
 
         for class_obj in cls.__mro__:
@@ -12,8 +19,20 @@ def resolve_abc_prop(cls):
                 if isinstance(value, property):
                     yield key, value
 
-    non_abstract_prop = dict((key, value) for key, value in gen_properties() if not value.__isabstractmethod__)
-    abstract_prop = dict((key, value) for key, value in gen_properties() if value.__isabstractmethod__)
+    def gen_non_abstract_prop() -> Generator[Tuple[str, Any], None, None]:
+        for key, value in gen_properties():
+            if not hasattr(value, '__isabstractmethod__') \
+                    or not getattr(value, '__isabstractmethod__'):
+                yield key, value
+
+    def gen_abstract_prop() -> Generator[Tuple[str, Any], None, None]:
+        for key, value in gen_properties():
+            if hasattr(value, '__isabstractmethod__') \
+                    and getattr(value, '__isabstractmethod__'):
+                yield key, value
+
+    non_abstract_prop = dict(gen_non_abstract_prop())
+    abstract_prop = dict(gen_abstract_prop())
 
     def gen_get_set_properties():
         """ for each matching data and abstract property pair,
@@ -78,8 +97,9 @@ def dataclass_abc(_cls=None, *, repr=True, eq=True, order=False, unsafe_hash=Fal
             for field in fields.values():
                 # Include InitVars and regular fields (so, not ClassVars).
                 if field._field_type in (_FIELD, _FIELD_INITVAR):
-                    field.default = MISSING
-                    field.default_factory = MISSING
+                    if isinstance(field.default, property) and field.default.__isabstractmethod__:
+                        field.default = MISSING
+
                     yield field
 
         flds = list(gen_fields())
@@ -103,8 +123,8 @@ def dataclass_abc(_cls=None, *, repr=True, eq=True, order=False, unsafe_hash=Fal
 
     # See if we're being called as @dataclass or @dataclass().
     if _cls is None:
-        # We're called with parens.
+        # We're called with parents.
         return wrap
 
-    # We're called as @dataclass without parens.
+    # We're called as @dataclass without parents.
     return wrap(_cls)
