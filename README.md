@@ -19,12 +19,44 @@ from dataclass_abc import dataclass_abc
 class A(ABC):
     @property
     @abstractmethod
-    def val(self) -> str:
+    def name(self) -> str:
         ...
 
 @dataclass_abc(frozen=True)
 class B(A):
-    val: str        # overwrites the abstract property 'val' in 'A'
+    name: str        # overwrites the abstract property 'name' in 'A'
+```
+
+## Define mutable variables
+
+Define a mutable variable `name` in the abstract class `A` by using the
+`name.setter` decorator. 
+
+``` python
+from abc import ABC, abstractmethod
+
+from dataclass_abc import dataclass_abc
+
+class A(ABC):
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        ...
+
+    @name.setter
+    @abstractmethod
+    def name(self, val: str):
+        ...
+
+    def set_name(self, val: str):
+        self.name = val
+
+@dataclass_abc
+class B(A):
+    name: str
+
+b = B(name='A')
+b.set_name('B')
 ```
 
 ## Example
@@ -35,8 +67,7 @@ implements the code snippets taken from [RealPython](https://realpython.com/pyth
 
 ## Design pattern
 
-This library suggests the design pattern as implemented in the 
-[example](https://github.com/MichaelSchneeberger/dataclass-abc/tree/master/example):
+This library suggests the following design pattern:
 
 - **mixins** - a *mixin* is an abstract class that implements data as abstract
 properties and methods based on the abstract properties.
