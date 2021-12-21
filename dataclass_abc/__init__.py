@@ -5,6 +5,7 @@ from dataclasses import _POST_INIT_NAME  # type: ignore
 from dataclasses import _init_fn  # type: ignore
 from dataclasses import _set_new_attribute  # type: ignore
 from dataclasses import dataclass as parent_dataclass, MISSING
+from dataclasses import _fields_in_init_order
 from typing import Generator, Tuple, Any, TypeVar
 
 T = TypeVar('T')
@@ -102,13 +103,14 @@ def dataclass_abc(_cls=None, *, repr=True, eq=True, order=False, unsafe_hash=Fal
 
                     yield field
 
-        flds = list(gen_fields())
+        all_init_fields = list(gen_fields())
+        (std_init_fields, kw_only_init_fields) = _fields_in_init_order(all_init_fields)
 
         # Does this class have a post-init function?
         has_post_init = hasattr(cls, _POST_INIT_NAME)
 
         _set_new_attribute(cls, '__init__',
-                           _init_fn(flds,
+                           _init_fn(all_init_fields, std_init_fields, kw_only_init_fields,
                                     frozen,
                                     has_post_init,
                                     # The name to use for the "self"
