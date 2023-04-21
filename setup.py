@@ -9,8 +9,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='dataclass_abc',
-    version='0.0.7',
+    name='dataclass-abc',
+    version='0.0.8',
     description='Library that lets you define abstract properties for dataclasses.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -21,7 +21,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.11',
     ],
-    keywords='dataclass_abc abstract abc property',
-    packages=['dataclass_abc'],
+    keywords='dataclass-abc abstract abc property',
+    packages=['dataclassabc'],
     python_requires='>=3.10',
 )

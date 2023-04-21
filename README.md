@@ -8,13 +8,13 @@ Library that lets you define abstract properties for dataclasses.
 
 ## Usage
 
-The `dataclass_abc` class decorator resolves the abstract properties 
+The `dataclassabc` class decorator resolves the abstract properties 
 overwritten by a field.
 
 ``` python
 from abc import ABC, abstractmethod
 
-from dataclass_abc import dataclass_abc
+from dataclassabc import dataclassabc
 
 class A(ABC):
     @property
@@ -22,7 +22,7 @@ class A(ABC):
     def name(self) -> str:
         ...
 
-@dataclass_abc(frozen=True)
+@dataclassabc(frozen=True)
 class B(A):
     name: str        # overwrites the abstract property 'name' in 'A'
 ```
@@ -35,7 +35,7 @@ Define a mutable variable `name` in the abstract class `A` by using the
 ``` python
 from abc import ABC, abstractmethod
 
-from dataclass_abc import dataclass_abc
+from dataclassabc import dataclassabc
 
 class A(ABC):
     @property
@@ -51,7 +51,7 @@ class A(ABC):
     def set_name(self, val: str):
         self.name = val
 
-@dataclass_abc
+@dataclassabc
 class B(A):
     name: str
 
@@ -76,7 +76,7 @@ properties and methods based on the abstract properties.
 e.g. using `isinstance` method.
 - **impl** - an *implementation class* implements the abstract properties. 
 (see `CityImpl` or `CapitalCityImpl` in the example). This class is decorated with
-`dataclass_abc` and `resolve_abc_prop` and should always be called through an 
+`dataclassabc` and `resolve_abc_prop` and should always be called through an 
 *initialize function*.
 - **init** - an *initialize function* (or *constructor function*) initializes an 
 *implementation class*.

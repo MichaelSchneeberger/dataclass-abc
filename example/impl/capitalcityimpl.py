@@ -1,8 +1,8 @@
-from dataclass_abc import dataclass_abc
+from dataclassabc import dataclassabc
 from example.capitalcity import CapitalCity
 
 
-@dataclass_abc
+@dataclassabc
 class CapitalCityImpl(CapitalCity):
     city_name: str
     lon: float

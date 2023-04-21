@@ -2,7 +2,7 @@ import unittest
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from dataclass_abc import resolve_abc_prop
+from dataclassabc import resolve_abc_prop
 
 
 class TestResolveABCProp(unittest.TestCase):

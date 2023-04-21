@@ -65,7 +65,7 @@ def resolve_abc_prop(cls):
     return new_cls
 
 
-def dataclass_abc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
+def dataclassabc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
                   unsafe_hash=False, frozen=False, match_args=True,
                   kw_only=False, slots=False, weakref_slot=False):
     """
@@ -78,7 +78,7 @@ def dataclass_abc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
         def name(self) -> str:
             ...
 
-    @dataclass_abc(frozen=True)
+    @dataclassabc(frozen=True)
     class B(A):
         name: str
     ```
@@ -152,133 +152,3 @@ def dataclass_abc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
     return wrap(_cls)
 
 
-# def create_class(
-#     name: str,
-#     mixins: tuple[str],
-#     path: str,
-#     overwrite: bool = None,
-# ):
-#     """
-
-#     """
-
-#     impl_class_name = f'{name}Impl'
-#     init_func_name = 'init_' + '_'.join(re.findall('[A-Z][^A-Z]*', name)).lower()
-#     init_file_name = init_func_name.replace('_', '')
-
-#     main_rel_import = f'{name.lower()}'
-#     impl_rel_import = ('impl', f'{impl_class_name.lower()}')
-#     init_rel_import = ('init', f'{init_file_name}')
-
-#     mixins_import = f'{path}.mixins'
-#     main_import = f'{path}.{name.lower()}'
-#     impl_import = '.'.join((path,) + impl_rel_import)
-
-#     folder_path = os.path.dirname(importlib.import_module(path).__file__)
-
-#     main_file_path = os.path.join(folder_path, f'{main_rel_import}.py')
-#     impl_folder_path = os.path.join(folder_path, impl_rel_import[0])
-#     impl_file_path = os.path.join(impl_folder_path, f'{impl_rel_import[1]}.py')
-#     init_folder_path = os.path.join(folder_path, init_rel_import[0])
-#     init_file_path = os.path.join(init_folder_path, f'{init_rel_import[1]}.py')
-
-#     if not overwrite:
-#         for folder_path in (main_file_path, impl_file_path, init_file_path):
-#             assert not os.path.exists(folder_path), f'"{folder_path}" already exists'
-
-#     # make sure the mixins exists
-#     def gen_mixin_imports():
-#         for mixin_name in mixins:
-
-#             mixin_import_path = f'{mixins_import}.{mixin_name.lower()}'
-
-#             mod = importlib.import_module(mixin_import_path)
-#             assert hasattr(mod, mixin_name), f'Mixin "{mixin_name}" does not exist'
-
-#             yield mixin_name, mixin_import_path
-
-#     mixins_info = tuple(gen_mixin_imports())
-
-#     # main class
-#     # ----------
-
-#     with open(main_file_path, 'w') as f:
-
-#         for mixin_name, mixin_import_path in mixins_info:
-#             f.write(f'from {mixin_import_path} import {mixin_name} \n')
-
-#         f.write('\n')
-
-#         extends_from_mixins = ', '.join(mixins)
-#         f.write(f'class {name}({extends_from_mixins}):\n\tpass\n')
-
-#     # dataclass implementation
-#     # ------------------------
-
-#     if not os.path.exists(impl_folder_path):
-#         os.makedirs(impl_folder_path)
-#         open(f'{impl_folder_path}/__init__.py', 'a').close()
-
-#     def gen_fields():
-#         mod = importlib.import_module(main_import)
-#         for class_obj in getattr(mod, name).__mro__:
-#             for key, value in class_obj.__dict__.items():
-#                 if hasattr(value, '__isabstractmethod__') and getattr(value, '__isabstractmethod__') and isinstance(value, property):
-#                     type_hint = typing.get_type_hints(value.fget)['return']
-#                     yield key, type_hint.__module__, type_hint.__qualname__
-
-#     fields = tuple(gen_fields())
-#     import_type_hints = set((module, cls_name) for _, module, cls_name in fields)
-
-#     with open(impl_file_path, 'w') as f:
-
-#         f.write(f'import dataclass_abc\n')
-#         f.write(f'from {main_import} import {name} \n')
-
-#         f.write('\n')
-
-#         for module, cls_name in import_type_hints:
-#             if module != 'builtins':
-#                 f.write(f'from {module} import {cls_name} \n')
-
-#         f.write('\n')
-
-#         f.write(f'@dataclass_abc.dataclass_abc(frozen=True)\n')
-#         f.write(f'class {impl_class_name}({name}):\n')
-
-#         for field_name, module, cls_name in fields:
-#             f.write(f'\t{field_name}: {cls_name}\n')
-
-#     # init_function
-#     # -------------
-
-#     if not os.path.exists(init_folder_path):
-#         os.makedirs(init_folder_path)
-#         open(f'{init_folder_path}/__init__.py', 'a').close()
-
-#     with open(init_file_path, 'w') as f:
-
-#         init_func_name = '_'.join(re.findall('[A-Z][^A-Z]*', name)).lower()
-
-#         for module, cls_name in import_type_hints:
-#             if module != 'builtins':
-#                 f.write(f'from {module} import {cls_name}\n')
-
-#         f.write(f'from {impl_import} import {impl_class_name}\n')
-
-#         f.write('\n')
-#         f.write('\n')
-
-#         f.write(f'def init_{init_func_name}(\n')
-
-#         for field_name, module, cls_name in fields:
-#             f.write(f'\t\t{field_name}: {cls_name},\n')
-
-#         f.write(f'):\n')
-
-#         f.write(f'\treturn {impl_class_name}(\n')
-
-#         for field_name, module, cls_name in fields:
-#             f.write(f'\t\t{field_name}={field_name},\n')
-
-#         f.write(f')\n')
