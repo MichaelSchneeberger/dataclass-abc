@@ -5,6 +5,8 @@ from dataclasses import (_FIELD, _FIELD_INITVAR, _POST_INIT_NAME, MISSING,
                          _set_new_attribute)
 from typing import Any, Generator, Tuple
 
+__all__ = ['dataclassabc']
+
 
 def resolve_abc_prop(cls):
     def gen_properties() -> Generator[Tuple[str, Any], None, None]:
