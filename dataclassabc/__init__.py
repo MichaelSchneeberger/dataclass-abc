@@ -1,9 +1,17 @@
 import sys
-import typing
 from dataclasses import (_FIELD, _FIELD_INITVAR, _POST_INIT_NAME, MISSING,
                          _fields_in_init_order, _init_fn, _process_class,
-                         _set_new_attribute)
-from typing import Any, Generator, Tuple
+                         _set_new_attribute, Field, field)
+from typing import (Any, Generic, TypeVar, Type, Callable, Generator, Tuple,
+                    dataclass_transform)
+try:
+    from typing import overload
+except ImportError:
+    from typing_extensions import overload
+
+
+__all__ = ['dataclassabc']
+_T = TypeVar("_T")
 
 
 def resolve_abc_prop(cls):
@@ -54,7 +62,7 @@ def resolve_abc_prop(cls):
     get_set_properties = dict(gen_get_set_properties())
 
     mro_filtered = tuple(
-        mro for mro in cls.__mro__ if mro is not typing.Generic)
+        mro for mro in cls.__mro__ if mro is not Generic)
 
     new_cls = type(
         cls.__name__,
@@ -65,6 +73,43 @@ def resolve_abc_prop(cls):
     return new_cls
 
 
+@overload
+@dataclass_transform(field_specifiers=(Field, field))
+def dataclassabc(
+    _cls: None = None, /, *,
+    init: bool = True,
+    repr: bool = True,
+    eq: bool = True,
+    order: bool = False,
+    unsafe_hash: bool = False,
+    frozen: bool = False,
+    match_args: bool = True,
+    kw_only: bool = False,
+    slots: bool = False,
+    weakref_slot: bool = False
+) -> Callable[[Type[_T]], Type[_T]]:
+    ...
+
+
+@overload
+@dataclass_transform(field_specifiers=(Field, field))
+def dataclassabc(
+    _cls: Type[_T], /, *,
+    init: bool = True,
+    repr: bool = True,
+    eq: bool = True,
+    order: bool = False,
+    unsafe_hash: bool = False,
+    frozen: bool = False,
+    match_args: bool = True,
+    kw_only: bool = False,
+    slots: bool = False,
+    weakref_slot: bool = False
+) -> Type[_T]:
+    ...
+
+
+@dataclass_transform(field_specifiers=(Field, field))
 def dataclassabc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
                   unsafe_hash=False, frozen=False, match_args=True,
                   kw_only=False, slots=False, weakref_slot=False):

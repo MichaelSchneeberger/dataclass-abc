@@ -22,6 +22,7 @@ setup(
         'Programming Language :: Python :: 3.11',
     ],
     keywords='dataclass-abc abstract abc property',
+    package_data={'dataclassabc': ['py.typed']},
     packages=['dataclassabc'],
     python_requires='>=3.10',
 )
