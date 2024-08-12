@@ -1,36 +1,64 @@
-# Dataclass ABC
+# Dataclassabc
 
-Library that lets you define abstract properties for dataclasses. 
+A Python library that allows you to define abstract properties for dataclasses, bridging the gap between abstract base classes (ABCs) and dataclasses.
 
 ## Installation
 
-```pip install dataclass-abc```
+Install the library using pip:
+
+```bash
+pip install dataclassabc
+```
 
 ## Usage
 
-The `dataclassabc` class decorator resolves the abstract properties 
-overwritten by a field.
+The `dataclassabc` decorator enables the use of abstract properties within dataclasses.
+It resolves abstract properties defined in an abstract base class (ABC) and enforces their implementation through fields in the derived dataclass.
+
+### Example
+
+Here's how you can define an abstract property in a base class and implement it in a derived dataclass:
 
 ``` python
 from abc import ABC, abstractmethod
 
 from dataclassabc import dataclassabc
 
+# Define an abstract base class with an abstract property
 class A(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
         ...
 
+# Use the dataclassabc decorator to implement the abstract property in a dataclass
 @dataclassabc(frozen=True)
 class B(A):
-    name: str        # overwrites the abstract property 'name' in 'A'
+    # Implementing the abstract property 'name'
+    name: str
 ```
+
+Using the standard `dataclass` decorator from the `dataclasses` module to implement abstract properties will result in a TypeError, as shown below:
+
+``` python
+from abc import ABC, abstractmethod
+
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class B(A):
+    name: str
+
+# TypeError: Can't instantiate abstract class B without an implementation for abstract method 'name'
+b = B(name='A')
+```
+
 
 ## Define mutable variables
 
-Define a mutable variable `name` in the abstract class `A` by using the
-`name.setter` decorator. 
+You can define mutable abstract properties by using the `@property` and `@name.setter` decorators in the abstract class. The following example demonstrates how to define and set a mutable property:
+
+### Example
 
 ``` python
 from abc import ABC, abstractmethod
@@ -48,35 +76,27 @@ class A(ABC):
     def name(self, val: str):
         ...
 
-    def set_name(self, val: str):
-        self.name = val
-
 @dataclassabc
 class B(A):
     name: str
 
 b = B(name='A')
-b.set_name('B')
+# modify the mutable variable
+b.name = 'B'
+
+# Output will be b=B(name='B')
+print(f'{b=}')
 ```
 
-## Example
+<!-- ## Design pattern
 
-The [example](https://github.com/MichaelSchneeberger/dataclass-abc/tree/master/example)
-implements the code snippets taken from [RealPython](https://realpython.com/python-data-classes/)
- with abstract properties.
+The `dataclassabc` library encourages a structured approach to designing dataclasses with abstract properties, following a specific design pattern:
 
-## Design pattern
+- **Mixins**: Abstract classes that define data through abstract properties and implement methods based on these properties.
+- **Abstract Classes** -  Inherit from one or more mixins and may define additional abstract methods or properties. These classes are typically used for type checking (e.g., with isinstance).
+- **Implementation Classes** - Concrete classes that implement the abstract properties. These classes are decorated with `dataclassabc`. They should be instantiated through an initializer function.
+- **initializer Functions** - Functions responsible for initializing and returning instances of implementation classes, encapsulating the creation logic.
 
-This library suggests the following design pattern:
+## Conclusion
 
-- **mixins** - a *mixin* is an abstract class that implements data as abstract
-properties and methods based on the abstract properties.
-- **classes** - an abstract class inherits from one or more mixins
-(see `City` or `CapitalCity` in the example). This class is used for pattern matching,
-e.g. using `isinstance` method.
-- **impl** - an *implementation class* implements the abstract properties. 
-(see `CityImpl` or `CapitalCityImpl` in the example). This class is decorated with
-`dataclassabc` and `resolve_abc_prop` and should always be called through an 
-*initialize function*.
-- **init** - an *initialize function* (or *constructor function*) initializes an 
-*implementation class*.
+The `dataclassabc` library facilitates the integration of abstract base classes with Python's dataclasses, promoting a clean and data focused design pattern in your projects. By following the recommended design pattern, you can maintain a clear separation of concerns between abstract definitions and their concrete implementations. -->
