@@ -1,5 +1,5 @@
 [project]
-name = "dataclassabc"
+name = "dataclass-abc"
 version = "0.0.9"
 description = 'A Python library that allows you to define abstract properties for dataclasses, bridging the gap between abstract base classes (ABCs) and dataclasses.'
 authors = [
