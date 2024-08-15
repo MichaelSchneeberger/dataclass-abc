@@ -1,22 +1,29 @@
 import sys
-from dataclasses import (_FIELD, _FIELD_INITVAR, _POST_INIT_NAME, MISSING,
-                         _fields_in_init_order, _init_fn, _process_class,
-                         _set_new_attribute, Field, field)
-from typing import (Any, Generic, TypeVar, Type, Callable, Generator, Tuple,
-                    dataclass_transform)
-try:
-    from typing import overload
-except ImportError:
-    from typing_extensions import overload
+from dataclasses import (
+    _FIELD,
+    _FIELD_INITVAR,
+    _POST_INIT_NAME,
+    MISSING,
+    _fields_in_init_order,
+    _init_fn,
+    _process_class,
+    _set_new_attribute,
+    Field,
+    field,
+)
+from typing import Any, Generic, TypeVar, Type, Callable, Generator, Tuple
+
+# ensures compatibility with Python 3.10
+from typing_extensions import overload, dataclass_transform
 
 
-__all__ = ['dataclassabc']
+__all__ = ["dataclassabc"]
 _T = TypeVar("_T")
 
 
 def resolve_abc_prop(cls):
     def gen_properties() -> Generator[Tuple[str, Any], None, None]:
-        """ search abstract properties in super classes """
+        """search abstract properties in super classes"""
 
         for class_obj in cls.__mro__:
             for key, value in class_obj.__dict__.items():
@@ -25,44 +32,48 @@ def resolve_abc_prop(cls):
 
     def gen_non_abstract_prop() -> Generator[Tuple[str, Any], None, None]:
         for key, value in gen_properties():
-            if not hasattr(value, '__isabstractmethod__') \
-                    or not getattr(value, '__isabstractmethod__'):
+            if not hasattr(value, "__isabstractmethod__") or not getattr(
+                value, "__isabstractmethod__"
+            ):
                 yield key, value
 
     def gen_abstract_prop() -> Generator[Tuple[str, Any], None, None]:
         for key, value in gen_properties():
-            if hasattr(value, '__isabstractmethod__') \
-                    and getattr(value, '__isabstractmethod__'):
+            if hasattr(value, "__isabstractmethod__") and getattr(
+                value, "__isabstractmethod__"
+            ):
                 yield key, value
 
     non_abstract_prop = dict(gen_non_abstract_prop())
     abstract_prop = dict(gen_abstract_prop())
 
     def gen_get_set_properties():
-        """ for each matching data and abstract property pair,
-            create a getter and setter method """
+        """for each matching data and abstract property pair,
+        create a getter and setter method"""
 
         for class_obj in cls.__mro__:
-            if '__dataclass_fields__' in class_obj.__dict__:
-                for key, _ in class_obj.__dict__['__dataclass_fields__'].items():
+            if "__dataclass_fields__" in class_obj.__dict__:
+                for key, _ in class_obj.__dict__["__dataclass_fields__"].items():
                     if key in abstract_prop:
+
                         def get_func(self, key=key):
-                            return getattr(self, f'__{key}')
+                            return getattr(self, f"__{key}")
 
                         def set_func(self, val, key=key):
-                            return setattr(self, f'__{key}', val)
+                            return setattr(self, f"__{key}", val)
 
                         yield key, property(get_func, set_func)
 
                     elif key in non_abstract_prop:
-                        raise AttributeError(f'field "{key}" shadows non-abstract property "{key}", '
-                                             f'either turn property "{key}" to an abstract property '
-                                             f'or rename the field "{key}".')
+                        raise AttributeError(
+                            f'field "{key}" shadows non-abstract property "{key}", '
+                            f'either turn property "{key}" to an abstract property '
+                            f'or rename the field "{key}".'
+                        )
 
     get_set_properties = dict(gen_get_set_properties())
 
-    mro_filtered = tuple(
-        mro for mro in cls.__mro__ if mro is not Generic)
+    mro_filtered = tuple(mro for mro in cls.__mro__ if mro is not Generic)
 
     new_cls = type(
         cls.__name__,
@@ -76,7 +87,9 @@ def resolve_abc_prop(cls):
 @overload
 @dataclass_transform(field_specifiers=(Field, field))
 def dataclassabc(
-    _cls: None = None, /, *,
+    _cls: None = None,
+    /,
+    *,
     init: bool = True,
     repr: bool = True,
     eq: bool = True,
@@ -86,15 +99,16 @@ def dataclassabc(
     match_args: bool = True,
     kw_only: bool = False,
     slots: bool = False,
-    weakref_slot: bool = False
-) -> Callable[[Type[_T]], Type[_T]]:
-    ...
+    weakref_slot: bool = False,
+) -> Callable[[Type[_T]], Type[_T]]: ...
 
 
 @overload
 @dataclass_transform(field_specifiers=(Field, field))
 def dataclassabc(
-    _cls: Type[_T], /, *,
+    _cls: Type[_T],
+    /,
+    *,
     init: bool = True,
     repr: bool = True,
     eq: bool = True,
@@ -104,15 +118,26 @@ def dataclassabc(
     match_args: bool = True,
     kw_only: bool = False,
     slots: bool = False,
-    weakref_slot: bool = False
-) -> Type[_T]:
-    ...
+    weakref_slot: bool = False,
+) -> Type[_T]: ...
 
 
 @dataclass_transform(field_specifiers=(Field, field))
-def dataclassabc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
-                  unsafe_hash=False, frozen=False, match_args=True,
-                  kw_only=False, slots=False, weakref_slot=False):
+def dataclassabc(
+    _cls=None,
+    /,
+    *,
+    init=True,
+    repr=True,
+    eq=True,
+    order=False,
+    unsafe_hash=False,
+    frozen=False,
+    match_args=True,
+    kw_only=False,
+    slots=False,
+    weakref_slot=False,
+):
     """
     meant to be used as a class decorator similarly to `dataclasses.dataclass`.
 
@@ -136,25 +161,46 @@ def dataclassabc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
     """
 
     def wrap(cls):
-
         try:
-            cls = _process_class(cls, init=False, repr=repr, eq=eq, order=order, unsafe_hash=unsafe_hash,
-                                 frozen=frozen, match_args=match_args, kw_only=kw_only, slots=slots,
-                                 weakref_slot=weakref_slot)
+            cls = _process_class(
+                cls,
+                init=False,
+                repr=repr,
+                eq=eq,
+                order=order,
+                unsafe_hash=unsafe_hash,
+                frozen=frozen,
+                match_args=match_args,
+                kw_only=kw_only,
+                slots=slots,
+                weakref_slot=weakref_slot,
+            )
         except TypeError:
-            cls = _process_class(cls, init=False, repr=repr, eq=eq, order=order, unsafe_hash=unsafe_hash,
-                                 frozen=frozen, match_args=match_args, kw_only=kw_only, slots=slots)
+            cls = _process_class(
+                cls,
+                init=False,
+                repr=repr,
+                eq=eq,
+                order=order,
+                unsafe_hash=unsafe_hash,
+                frozen=frozen,
+                match_args=match_args,
+                kw_only=kw_only,
+                slots=slots,
+            )
 
         # delete default value of field referencing abstract properties
 
-        fields = cls.__dict__['__dataclass_fields__']
+        fields = cls.__dict__["__dataclass_fields__"]
 
         def gen_fields():
             for field in fields.values():
                 if field._field_type in (_FIELD, _FIELD_INITVAR):
-
                     # delete default
-                    if isinstance(field.default, property) and field.default.__isabstractmethod__:
+                    if (
+                        isinstance(field.default, property)
+                        and field.default.__isabstractmethod__
+                    ):
                         field.default = MISSING
 
                     yield field
@@ -172,20 +218,23 @@ def dataclassabc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
 
         has_post_init = hasattr(cls, _POST_INIT_NAME)
 
-        _set_new_attribute(cls, '__init__',
-                           _init_fn(all_init_fields,
-                                    std_init_fields,
-                                    kw_only_init_fields,
-                                    frozen,
-                                    has_post_init,
-                                    # The name to use for the "self"
-                                    # param in __init__.  Use "self"
-                                    # if possible.
-                                    '__dataclass_self__' if 'self' in fields
-                                    else 'self',
-                                    globals,
-                                    slots,
-                                    ))
+        _set_new_attribute(
+            cls,
+            "__init__",
+            _init_fn(
+                all_init_fields,
+                std_init_fields,
+                kw_only_init_fields,
+                frozen,
+                has_post_init,
+                # The name to use for the "self"
+                # param in __init__.  Use "self"
+                # if possible.
+                "__dataclass_self__" if "self" in fields else "self",
+                globals,
+                slots,
+            ),
+        )
 
         # -------------------- end: copy code from dataclasses -----------------------
 
@@ -195,5 +244,3 @@ def dataclassabc(_cls=None, /, *, init=True, repr=True, eq=True, order=False,
         return wrap
 
     return wrap(_cls)
-
-

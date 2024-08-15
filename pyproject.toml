@@ -1,12 +1,12 @@
 [project]
 name = "dataclass-abc"
-version = "0.0.9"
+version = "0.0.10"
 description = 'A Python library that allows you to define abstract properties for dataclasses, bridging the gap between abstract base classes (ABCs) and dataclasses.'
 authors = [
   {name="Michael Schneeberger", email="michael.schneeb@hotmail.com"},
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 
 [project.urls]
 Homepage = "https://github.com/MichaelSchneeberger/dataclass-abc"
