@@ -28,8 +28,7 @@ from dataclassabc import dataclassabc
 class A(ABC):
     @property
     @abstractmethod
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
 
 # Use the dataclassabc decorator to implement the abstract property in a dataclass
 @dataclassabc(frozen=True)
@@ -68,13 +67,11 @@ from dataclassabc import dataclassabc
 class A(ABC):
     @property
     @abstractmethod
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
 
     @name.setter
     @abstractmethod
-    def name(self, val: str):
-        ...
+    def name(self, val: str): ...
 
 @dataclassabc
 class B(A):
@@ -88,15 +85,6 @@ b.name = 'B'
 print(f'{b=}')
 ```
 
-<!-- ## Design pattern
+<!-- ## References
 
-The `dataclassabc` library encourages a structured approach to designing dataclasses with abstract properties, following a specific design pattern:
-
-- **Mixins**: Abstract classes that define data through abstract properties and implement methods based on these properties.
-- **Abstract Classes** -  Inherit from one or more mixins and may define additional abstract methods or properties. These classes are typically used for type checking (e.g., with isinstance).
-- **Implementation Classes** - Concrete classes that implement the abstract properties. These classes are decorated with `dataclassabc`. They should be instantiated through an initializer function.
-- **initializer Functions** - Functions responsible for initializing and returning instances of implementation classes, encapsulating the creation logic.
-
-## Conclusion
-
-The `dataclassabc` library facilitates the integration of abstract base classes with Python's dataclasses, promoting a clean and data focused design pattern in your projects. By following the recommended design pattern, you can maintain a clear separation of concerns between abstract definitions and their concrete implementations. -->
+* [Question on Stackoverflow](https://stackoverflow.com/questions/51079503/dataclasses-and-property-decorator/59824846#59824846) -->

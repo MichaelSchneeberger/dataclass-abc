@@ -1,20 +1,23 @@
 import sys
 from dataclasses import (
-    _FIELD,
-    _FIELD_INITVAR,
-    _POST_INIT_NAME,
-    MISSING,
-    _fields_in_init_order,
-    _init_fn,
-    _process_class,
-    _set_new_attribute,
-    Field,
-    field,
+    _FIELD,  # type: ignore
+    _FIELD_INITVAR,  # type: ignore
+    _POST_INIT_NAME,  # type: ignore
+    MISSING as _MISSING,
+    _fields_in_init_order,  # type: ignore
+    _init_fn,  # type: ignore
+    _process_class,  # type: ignore
+    _set_new_attribute,  # type: ignore
+    Field as _Field,
+    field as _field,
 )
-from typing import Any, Generic, TypeVar, Type, Callable, Generator, Tuple
+from typing import Generic, TypeVar, Type, Callable
 
 # ensures compatibility with Python 3.10
-from typing_extensions import overload, dataclass_transform
+from typing_extensions import (
+    overload as _overload,
+    dataclass_transform as _dataclass_transform,
+)
 
 
 __all__ = ["dataclassabc"]
@@ -22,34 +25,60 @@ _T = TypeVar("_T")
 
 
 def resolve_abc_prop(cls):
-    def gen_properties() -> Generator[Tuple[str, Any], None, None]:
-        """search abstract properties in super classes"""
+    """
+    Resolves abstract properties in a dataclass by replacing dataclass fields that shadow abstract properties
+    with properties. The new properties access the underlying field value through a private attribute named
+    '__[field_name]'. This ensures that the dataclass correctly implements the abstract property requirements.
 
-        for class_obj in cls.__mro__:
-            for key, value in class_obj.__dict__.items():
-                if isinstance(value, property):
-                    yield key, value
+    Example:
 
-    def gen_non_abstract_prop() -> Generator[Tuple[str, Any], None, None]:
-        for key, value in gen_properties():
-            if not hasattr(value, "__isabstractmethod__") or not getattr(
-                value, "__isabstractmethod__"
-            ):
-                yield key, value
+    ```python
+    from abc import ABC, abstractmethod
+    from dataclasses import dataclass
+    from dataclassabc import resolve_abc_prop
 
-    def gen_abstract_prop() -> Generator[Tuple[str, Any], None, None]:
-        for key, value in gen_properties():
-            if hasattr(value, "__isabstractmethod__") and getattr(
-                value, "__isabstractmethod__"
-            ):
-                yield key, value
+    # Abstract base class with an abstract property
+    class A(ABC):
+        @property
+        @abstractmethod
+        def x(self) -> int:
+            pass
 
-    non_abstract_prop = dict(gen_non_abstract_prop())
-    abstract_prop = dict(gen_abstract_prop())
+    # Dataclass implementing the abstract property
+    @resolve_abc_prop
+    @dataclass
+    class B(A):
+        x: int  # This field shadows the abstract property 'x'
+    ```
+
+    In this example, the `resolve_abc_prop` decorator ensures that the `x` field in class `B` implements
+    the abstract property `x` from class `A`, allowing the dataclass to function correctly without raising
+    a `TypeError`.
+
+    :param cls: The dataclass class to which the decorator is applied.
+    :return: The modified class with resolved abstract properties.
+    """
+
+    non_abstract_prop = {}
+    abstract_prop = {}
+
+    for class_obj in cls.__mro__:
+        for key, value in class_obj.__dict__.items():
+            if isinstance(value, property):
+                if not hasattr(value, "__isabstractmethod__") or not getattr(
+                    value, "__isabstractmethod__"
+                ):
+                    non_abstract_prop[key] = value
+
+                elif hasattr(value, "__isabstractmethod__") and getattr(
+                    value, "__isabstractmethod__"
+                ):
+                    abstract_prop[key] = value
 
     def gen_get_set_properties():
-        """for each matching data and abstract property pair,
-        create a getter and setter method"""
+        """
+        For each matching dataclass field and abstract property pair, create a getter and setter method.
+        """
 
         for class_obj in cls.__mro__:
             if "__dataclass_fields__" in class_obj.__dict__:
@@ -73,6 +102,7 @@ def resolve_abc_prop(cls):
 
     get_set_properties = dict(gen_get_set_properties())
 
+    # filter out Generic classes
     mro_filtered = tuple(mro for mro in cls.__mro__ if mro is not Generic)
 
     new_cls = type(
@@ -84,8 +114,8 @@ def resolve_abc_prop(cls):
     return new_cls
 
 
-@overload
-@dataclass_transform(field_specifiers=(Field, field))
+@_overload
+@_dataclass_transform(field_specifiers=(_Field, _field))
 def dataclassabc(
     _cls: None = None,
     /,
@@ -103,8 +133,8 @@ def dataclassabc(
 ) -> Callable[[Type[_T]], Type[_T]]: ...
 
 
-@overload
-@dataclass_transform(field_specifiers=(Field, field))
+@_overload
+@_dataclass_transform(field_specifiers=(_Field, _field))
 def dataclassabc(
     _cls: Type[_T],
     /,
@@ -122,7 +152,7 @@ def dataclassabc(
 ) -> Type[_T]: ...
 
 
-@dataclass_transform(field_specifiers=(Field, field))
+@_dataclass_transform(field_specifiers=(_Field, _field))
 def dataclassabc(
     _cls=None,
     /,
@@ -139,7 +169,8 @@ def dataclassabc(
     weakref_slot=False,
 ):
     """
-    meant to be used as a class decorator similarly to `dataclasses.dataclass`.
+    A decorator that transforms an abstract class into a dataclass, resolving abstract properties that are
+    overridden by dataclass fields.
 
     ```
     class A(ABC):
@@ -148,15 +179,11 @@ def dataclassabc(
         def name(self) -> str:
             ...
 
+    # Apply the dataclassabc decorator to create a dataclass that fulfills the abstract class's contract
     @dataclassabc(frozen=True)
     class B(A):
-        name: str
+        name: str  # Implements the abstract property 'name'
     ```
-
-    in addition to `dataclasses.dataclass` it:
-
-    * erases the default value of the fields
-    * resolves the abstract properties overwritten by a field
 
     """
 
@@ -175,7 +202,7 @@ def dataclassabc(
                 slots=slots,
                 weakref_slot=weakref_slot,
             )
-        except TypeError:
+        except TypeError:  # Python 3.10
             cls = _process_class(
                 cls,
                 init=False,
@@ -189,25 +216,56 @@ def dataclassabc(
                 slots=slots,
             )
 
-        # delete default value of field referencing abstract properties
-
         fields = cls.__dict__["__dataclass_fields__"]
 
         def gen_fields():
+            """
+            Generates dataclass fields with _MISSING default value when shadowing abstract properties.
+
+            Abstract properties that shadow dataclass fields are added as default values to those fields. If this default
+            value (a property object) is not removed, the dataclass will incorrectly assign the property object as the
+            field's value when an argument is not provided during initialization.
+
+            Example:
+
+            ```python
+            from abc import ABC, abstractmethod
+            from dataclassabc import dataclassabc
+
+            class A(ABC):
+                @property
+                @abstractmethod
+                def name(self) -> str: ...
+
+            @dataclassabc(frozen=True)
+            class B(A):
+                name: str
+
+            # Attempting to create an instance without providing a value for 'name'
+            b = B()
+            print(b)   # Output: B(name=<property object at ...>)
+            ```
+
+            Once the field's default value is remove, initializing the dataclass `B` without providing a value for the `name` argument
+            will result in an error.
+
+            ``` python
+            # TypeError: B.__init__() missing 1 required positional argument: 'name'
+            b = B()
+            ```
+            """
+
             for field in fields.values():
                 if field._field_type in (_FIELD, _FIELD_INITVAR):
-                    # delete default
                     if (
                         isinstance(field.default, property)
                         and field.default.__isabstractmethod__
                     ):
-                        field.default = MISSING
+                        field.default = _MISSING
 
                     yield field
 
         all_init_fields = list(gen_fields())
-
-        # -------------------- begin: copy code from dataclasses -----------------------
 
         if cls.__module__ in sys.modules:
             globals = sys.modules[cls.__module__].__dict__
@@ -218,6 +276,7 @@ def dataclassabc(
 
         has_post_init = hasattr(cls, _POST_INIT_NAME)
 
+        # Recreate the __init__ method after removing default values from the fields
         _set_new_attribute(
             cls,
             "__init__",
@@ -236,8 +295,7 @@ def dataclassabc(
             ),
         )
 
-        # -------------------- end: copy code from dataclasses -----------------------
-
+        # Create a property for each abstract property that is overridden by a corresponding dataclass field
         return resolve_abc_prop(cls)
 
     if _cls is None:
