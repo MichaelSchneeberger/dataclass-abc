@@ -184,9 +184,7 @@ def dataclassabc(
     class B(A):
         name: str  # Implements the abstract property 'name'
     ```
-
     """
-
     def wrap(cls):
         try:
             cls = _process_class(
@@ -295,8 +293,12 @@ def dataclassabc(
             ),
         )
 
-        # Create a property for each abstract property that is overridden by a corresponding dataclass field
-        return resolve_abc_prop(cls)
+        if slots:
+            return cls
+        
+        else:
+            # Create a property for each abstract property that is overridden by a corresponding dataclass field
+            return resolve_abc_prop(cls)
 
     if _cls is None:
         return wrap
