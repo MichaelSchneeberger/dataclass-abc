@@ -1,23 +1,26 @@
-# Dataclassabc
+# Dataclass-abc
 
 A Python library that allows you to define abstract properties for dataclasses, bridging the gap between abstract base classes (ABCs) and dataclasses.
 
+
 ## Installation
 
-Install the library using pip:
+You can install dataclass-abc using pip:
 
 ```bash
 pip install dataclassabc
 ```
+
 
 ## Usage
 
 The `dataclassabc` decorator enables the use of abstract properties within dataclasses.
 It resolves abstract properties defined in an abstract base class (ABC) and enforces their implementation through fields in the derived dataclass.
 
+
 ### Example
 
-Here's how you can define an abstract property in a base class and implement it in a derived dataclass:
+Here's how you can define an abstract property in an abstract class and implement it in a derived dataclass:
 
 ``` python
 from abc import ABC, abstractmethod
@@ -35,7 +38,18 @@ class A(ABC):
 class B(A):
     # Implementing the abstract property 'name'
     name: str
+
+# Works as expected
+b1 = B(name='A')
+
+# TypeError: B.__init__() missing 1 required positional argument: 'name'
+b2 = B()
 ```
+
+
+## Issues with `dataclass`
+
+### TypeError: "Can't instantiate abstract class"
 
 Using the standard `dataclass` decorator from the `dataclasses` module to implement abstract properties will result in a TypeError, as shown below:
 
@@ -51,6 +65,53 @@ class B(A):
 # TypeError: Can't instantiate abstract class B without an implementation for abstract method 'name'
 b = B(name='A')
 ```
+
+
+### Unexpected Default Value with `slots=True`
+
+Using the `slots=True` with standard `dataclass` decorated will resolve the abstract properties.
+However, when no argument is provided when initializing the object, the abstract property of class A is used as a default value:
+
+``` python
+from abc import ABC, abstractmethod
+
+from dataclasses import dataclass
+
+@dataclass(frozen=True, slots=True)
+class B(A):
+    name: str
+
+# No exception is raised
+b = B()
+
+# The output will be <property object at ...>
+print(b.name)
+```
+
+
+### TypeError: "Non-default argument follows default argument"
+
+Furthermore, a `TypeError` is raised, when adding fields that do not implement an abstract property:
+
+``` python
+from abc import ABC, abstractmethod
+
+from dataclasses import dataclass
+
+@dataclass(frozen=True, slots=True)
+class B(A):
+    name: str
+    age: int
+
+# TypeError: non-default argument 'age' follows default argument 'name'
+b = B(age=12, name='A')
+```
+
+
+
+
+
+
 
 
 ## Define mutable variables
@@ -76,15 +137,4 @@ class A(ABC):
 @dataclassabc
 class B(A):
     name: str
-
-b = B(name='A')
-# modify the mutable variable
-b.name = 'B'
-
-# Output will be b=B(name='B')
-print(f'{b=}')
 ```
-
-<!-- ## References
-
-* [Question on Stackoverflow](https://stackoverflow.com/questions/51079503/dataclasses-and-property-decorator/59824846#59824846) -->
