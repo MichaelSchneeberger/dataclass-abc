@@ -49,109 +49,6 @@ b2 = B()
 ```
 
 
-## Issues with Standard `dataclass`
-
-
-### AttributeError: "Property object has not setter"
-
-Using the standard `dataclass` decorator to implement abstract properties will result in a exception, as shown below:
-<!-- When using the standard dataclass decorator, attempting to implement abstract properties can result in an exception: -->
-
-``` python
-from abc import abstractmethod
-
-from dataclasses import dataclass
-
-class A:
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        ...
-
-@dataclass(frozen=True)
-class B(A):
-    name: str
-
-# AttributeError: property 'name' of 'B' object has no setter
-b = B(name='A')
-```
-
-
-
-### TypeError: "Can't instantiate abstract class"
-
-Similar to the previous example, an exception is raised when using the `dataclass` decorator with a class that inherits from `ABC`:
-
-``` python
-from abc import ABC, abstractmethod
-
-from dataclasses import dataclass
-
-class A(ABC):
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        ...
-
-@dataclass(frozen=True)
-class B(A):
-    name: str
-
-# TypeError: Can't instantiate abstract class B without an implementation for abstract method 'name'
-b = B(name='A')
-```
-
-
-### Unexpected Default Value with `slots=True`
-
-Using the `slots=True` option with the `dataclass` decorator results in unexpected behavior.
-If no value is provided for the field, the abstract property is incorrectly used as the default value:
-<!-- will resolve the abstract properties.
-However, when no argument is provided when initializing the object, the abstract property of class A is used as a default value: -->
-
-``` python
-from abc import ABC, abstractmethod
-
-from dataclasses import dataclass
-
-@dataclass(frozen=True, slots=True)
-class B(A):
-    name: str
-
-# No exception is raised
-b = B()
-
-# The output will be <property object at ...>
-print(b.name)
-```
-
-
-### TypeError: "Non-default argument follows default argument"
-
-<!-- Furthermore, a `TypeError` is raised, when adding fields that do not implement an abstract property: -->
-Adding fields that do not implement an abstract property can lead to a TypeError when the abstract properties are incorrectly treated as having default values:
-
-``` python
-from abc import ABC, abstractmethod
-
-from dataclasses import dataclass
-
-@dataclass(frozen=True, slots=True)
-class B(A):
-    name: str
-    age: int
-
-# TypeError: non-default argument 'age' follows default argument 'name'
-b = B(age=12, name='A')
-```
-
-
-
-
-
-
-
-
 ## Define mutable variables
 
 <!-- You can define mutable abstract properties by using the `@property` and `@name.setter` decorators in the abstract class. The following example demonstrates how to define and set a mutable property: -->
@@ -177,3 +74,100 @@ class A(ABC):
 class B(A):
     name: str
 ```
+
+
+
+## Standard `dataclass`
+
+Here are known issues when using the standard `dataclass` decorator in combination with abstract classes:
+
+
+* AttributeError: "Property object has not setter"
+    <!-- Using the standard `dataclass` decorator to implement abstract properties will result in a exception, as shown below: -->
+    <!-- When using the standard dataclass decorator, attempting to implement abstract properties can result in an exception: -->
+        ``` python
+        from abc import abstractmethod
+
+        from dataclasses import dataclass
+
+        class A:
+            @property
+            @abstractmethod
+            def name(self) -> str:
+                ...
+
+        @dataclass(frozen=True)
+        class B(A):
+            name: str
+
+        # AttributeError: property 'name' of 'B' object has no setter
+        b = B(name='A')
+        ```
+
+
+
+* TypeError: "Can't instantiate abstract class"
+<!-- Similar to the previous example, an exception is raised when using the `dataclass` decorator with a class that inherits from `ABC`: -->
+        ``` python
+        from abc import ABC, abstractmethod
+
+        from dataclasses import dataclass
+
+        class A(ABC):
+            @property
+            @abstractmethod
+            def name(self) -> str:
+                ...
+
+        @dataclass(frozen=True)
+        class B(A):
+            name: str
+
+        # TypeError: Can't instantiate abstract class B without an implementation for abstract method 'name'
+        b = B(name='A')
+        ```
+
+
+* Unexpected Default Value with `slots=True`
+<!-- Using the `slots=True` option with the `dataclass` decorator results in unexpected behavior. -->
+<!-- If no value is provided for the field, the abstract property is incorrectly used as the default value: -->
+<!-- will resolve the abstract properties.
+However, when no argument is provided when initializing the object, the abstract property of class A is used as a default value: -->
+        ``` python
+        from abc import ABC, abstractmethod
+
+        from dataclasses import dataclass
+
+        @dataclass(frozen=True, slots=True)
+        class B(A):
+            name: str
+
+        # No exception is raised
+        b = B()
+
+        # The output will be <property object at ...>
+        print(b.name)
+        ```
+
+
+* TypeError: "Non-default argument follows default argument"
+<!-- Furthermore, a `TypeError` is raised, when adding fields that do not implement an abstract property: -->
+<!-- Adding fields that do not implement an abstract property can lead to a TypeError when the abstract properties are incorrectly treated as having default values: -->
+        ``` python
+        from abc import ABC, abstractmethod
+
+        from dataclasses import dataclass
+
+        @dataclass(frozen=True, slots=True)
+        class B(A):
+            name: str
+            age: int
+
+        # TypeError: non-default argument 'age' follows default argument 'name'
+        b = B(age=12, name='A')
+        ```
+
+
+
+
+
