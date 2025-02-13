@@ -81,7 +81,6 @@ class B(A):
 
 Here are known issues when using the standard `dataclass` decorator in combination with abstract classes:
 
-
 * AttributeError: "Property object has not setter"
     <!-- Using the standard `dataclass` decorator to implement abstract properties will result in a exception, as shown below: -->
     <!-- When using the standard dataclass decorator, attempting to implement abstract properties can result in an exception: -->
@@ -107,7 +106,7 @@ Here are known issues when using the standard `dataclass` decorator in combinati
 
 
 * TypeError: "Can't instantiate abstract class"
-<!-- Similar to the previous example, an exception is raised when using the `dataclass` decorator with a class that inherits from `ABC`: -->
+        <!-- Similar to the previous example, an exception is raised when using the `dataclass` decorator with a class that inherits from `ABC`: -->
         ``` python
         from abc import ABC, abstractmethod
 
@@ -129,10 +128,10 @@ Here are known issues when using the standard `dataclass` decorator in combinati
 
 
 * Unexpected Default Value with `slots=True`
-<!-- Using the `slots=True` option with the `dataclass` decorator results in unexpected behavior. -->
-<!-- If no value is provided for the field, the abstract property is incorrectly used as the default value: -->
-<!-- will resolve the abstract properties.
-However, when no argument is provided when initializing the object, the abstract property of class A is used as a default value: -->
+        <!-- Using the `slots=True` option with the `dataclass` decorator results in unexpected behavior. -->
+        <!-- If no value is provided for the field, the abstract property is incorrectly used as the default value: -->
+        <!-- will resolve the abstract properties.
+        However, when no argument is provided when initializing the object, the abstract property of class A is used as a default value: -->
         ``` python
         from abc import ABC, abstractmethod
 
@@ -151,8 +150,8 @@ However, when no argument is provided when initializing the object, the abstract
 
 
 * TypeError: "Non-default argument follows default argument"
-<!-- Furthermore, a `TypeError` is raised, when adding fields that do not implement an abstract property: -->
-<!-- Adding fields that do not implement an abstract property can lead to a TypeError when the abstract properties are incorrectly treated as having default values: -->
+        <!-- Furthermore, a `TypeError` is raised, when adding fields that do not implement an abstract property: -->
+        <!-- Adding fields that do not implement an abstract property can lead to a TypeError when the abstract properties are incorrectly treated as having default values: -->
         ``` python
         from abc import ABC, abstractmethod
 
