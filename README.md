@@ -130,11 +130,17 @@ Here are known issues when using the standard `dataclass` decorator in combinati
 
     from dataclasses import dataclass
 
+    class A(ABC):
+        @property
+        @abstractmethod
+        def name(self) -> str:
+            ...
+
     @dataclass(frozen=True, slots=True)
     class B(A):
         name: str
 
-    # No exception is raised
+    # No exception is raised when name is not provided
     b = B()
 
     # The output will be <property object at ...>
@@ -147,6 +153,12 @@ Here are known issues when using the standard `dataclass` decorator in combinati
     from abc import ABC, abstractmethod
 
     from dataclasses import dataclass
+
+    class A(ABC):
+        @property
+        @abstractmethod
+        def name(self) -> str:
+            ...
 
     @dataclass(frozen=True, slots=True)
     class B(A):
