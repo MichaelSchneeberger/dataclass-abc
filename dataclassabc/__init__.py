@@ -227,7 +227,7 @@ def dataclassabc(
                         field.default = _MISSING
 
             def gen_generic():
-                for base in types.get_original_bases(decorated_cls):
+                for base in getattr(decorated_cls, '__orig_bases__', ()):
                     if get_origin(base) is Generic:
                         yield base
 
