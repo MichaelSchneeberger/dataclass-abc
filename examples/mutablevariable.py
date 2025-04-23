@@ -20,4 +20,4 @@ class B(A):
 b = B(name='A')
 b.name = 'B'
 
-print(f'{b=}')
+print(f'{b=}')      # Output will be b=B(name='B')
