@@ -7,7 +7,8 @@ from dataclasses import (
     field as _field,
     dataclass as _dataclass,
 )
-from typing import Generic, TypeVar, Type, Callable
+import types
+from typing import Generic, TypeVar, Type, Callable, get_origin
 
 # ensures compatibility with Python 3.10
 from typing_extensions import (
@@ -210,12 +211,11 @@ def dataclassabc(
                     slots=slots,
                 )(inner_cls)
 
-        # create dataclass without init method to avoid non-default argument 
-        # follows default argument error
+        # create dataclass without init method to avoid "non-default argument 
+        # follows default argument" error
         decorated_cls = inner_dataclass(cls, init=False)
 
         if init:
-            # remove abstract properties from default field values 
             fields = decorated_cls.__dataclass_fields__
             for field in fields.values():
                 if field._field_type in (_FIELD, _FIELD_INITVAR):
@@ -223,14 +223,22 @@ def dataclassabc(
                         isinstance(field.default, property)
                         and field.default.__isabstractmethod__
                     ):
+                        # override default value
                         field.default = _MISSING
 
-            cls_no_init = type(
+            def gen_generic():
+                for base in types.get_original_bases(decorated_cls):
+                    if get_origin(base) is Generic:
+                        yield base
+
+            # create new class with empty dunder methods (__repr__, __setattr__, etc.)
+            #   to avoid triggering dataclass's exception
+            cls_no_init = types.new_class(
                 cls.__name__,
-                (decorated_cls,),
+                (decorated_cls,) + tuple(gen_generic()),
                 {},
             )
-            decorated_cls = inner_dataclass(cls_no_init, init=init)
+            decorated_cls = inner_dataclass(cls_no_init, init=True)
 
         if slots:
             return decorated_cls
