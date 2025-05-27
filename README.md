@@ -1,6 +1,5 @@
 # Dataclass-ABC
 
-<!-- A Python library that allows you to define abstract properties for dataclasses, bridging the gap between abstract base classes (ABCs) and dataclasses. -->
 **Dataclass-ABC** is a Python library that bridges the gap between abstract base classes (ABCs) and dataclasses. It allows you to define and automatically implement abstract properties in dataclasses when these properties are overridden by fields.
 
 
@@ -26,7 +25,6 @@ Here's how you can define an abstract property in an abstract class and implemen
 
 ``` python
 from abc import ABC, abstractmethod
-
 from dataclassabc import dataclassabc
 
 # Define an abstract base class with an abstract property
@@ -58,7 +56,6 @@ The dataclassabc library also supports defining mutable abstract properties. Use
 
 ``` python
 from abc import ABC, abstractmethod
-
 from dataclassabc import dataclassabc
 
 class A(ABC):
@@ -79,12 +76,11 @@ class B(A):
 
 ## Standard `dataclass`
 
-Here are known issues when using the standard `dataclass` decorator in combination with abstract classes:
+Here are known issues when using the standard `dataclass` decorator in combination with `abc` library:
 
-* AttributeError: "Property object has not setter"
+<!-- * AttributeError: "Property object has not setter"
     ``` python
     from abc import abstractmethod
-
     from dataclasses import dataclass
 
     class A:
@@ -99,14 +95,13 @@ Here are known issues when using the standard `dataclass` decorator in combinati
 
     # AttributeError: property 'name' of 'B' object has no setter
     b = B(name='A')
-    ```
+    ``` -->
 
 
 
-* TypeError: "Can't instantiate abstract class"
+* TypeError: "Can't instantiate abstract class" when trying to override an abstract property with a dataclass field.
     ``` python
     from abc import ABC, abstractmethod
-
     from dataclasses import dataclass
 
     class A(ABC):
@@ -124,10 +119,9 @@ Here are known issues when using the standard `dataclass` decorator in combinati
     ```
 
 
-* Unexpected Default Value with `slots=True`
+* Unexpected Default Value `<property object at ...>` when using dataclass option `slots=True`.
     ``` python
     from abc import ABC, abstractmethod
-
     from dataclasses import dataclass
 
     class A(ABC):
@@ -136,7 +130,7 @@ Here are known issues when using the standard `dataclass` decorator in combinati
         def name(self) -> str:
             ...
 
-    @dataclass(frozen=True, slots=True)
+    @dataclass(slots=True)
     class B(A):
         name: str
 
@@ -148,10 +142,9 @@ Here are known issues when using the standard `dataclass` decorator in combinati
     ```
 
 
-* TypeError: "Non-default argument follows default argument"
+* TypeError: "Non-default argument follows default argument" when using dataclass option `slots=True`.
     ``` python
     from abc import ABC, abstractmethod
-
     from dataclasses import dataclass
 
     class A(ABC):
@@ -160,7 +153,7 @@ Here are known issues when using the standard `dataclass` decorator in combinati
         def name(self) -> str:
             ...
 
-    @dataclass(frozen=True, slots=True)
+    @dataclass(slots=True)
     class B(A):
         name: str
         age: int
