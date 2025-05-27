@@ -2,6 +2,11 @@
 
 **Dataclass-ABC** is a Python library that bridges the gap between abstract base classes (ABCs) and dataclasses. It allows you to define and automatically implement abstract properties in dataclasses when these properties are overridden by fields.
 
+## Features
+
+* **Abstract properties**: Implement abstract properties by inheritence by using a dataclass.
+* **Trait Behavior**: Allows to reproduce Trait-like behavior (as in Scala or Rust) using Python ABC classes.
+
 
 
 ## Installation
