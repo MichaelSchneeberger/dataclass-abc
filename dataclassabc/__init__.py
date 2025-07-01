@@ -1,4 +1,5 @@
 import sys
+import functools
 from dataclasses import (
     _FIELD,  # type: ignore
     _FIELD_INITVAR,  # type: ignore
@@ -238,6 +239,7 @@ def dataclassabc(
                 (decorated_cls,) + tuple(gen_generic()),
                 {},
             )
+            cls_no_init = functools.update_wrapper(cls_no_init, cls, updated=())
             decorated_cls = inner_dataclass(cls_no_init, init=True)
 
         if slots:
