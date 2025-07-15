@@ -4,7 +4,7 @@
 
 ## Features
 
-* **Abstract properties**: Implement abstract properties by inheritence by using a dataclass.
+* **Abstract properties**: Implement abstract properties by inheritence using dataclasses.
 * **Trait Behavior**: Allows to reproduce Trait-like behavior (as in Scala or Rust) using Python ABC classes.
 
 
