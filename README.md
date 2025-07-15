@@ -55,9 +55,7 @@ b2 = B()
 ## Define mutable variables
 
 <!-- You can define mutable abstract properties by using the `@property` and `@name.setter` decorators in the abstract class. The following example demonstrates how to define and set a mutable property: -->
-The dataclassabc library also supports defining mutable abstract properties. Use the @property decorator alongside a setter to define mutable properties in the abstract class:
-
-### Example
+The dataclassabc library also supports defining mutable abstract properties. Use the @property decorator alongside a setter to define mutable properties in the abstract class.
 
 ``` python
 from abc import ABC, abstractmethod
@@ -79,7 +77,7 @@ class B(A):
 
 
 
-## Standard `dataclass`
+## Comparison with the standard `dataclass`
 
 Here are known issues when using the standard `dataclass` decorator in combination with `abc` library:
 
