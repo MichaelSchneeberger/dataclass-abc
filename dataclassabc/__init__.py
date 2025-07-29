@@ -62,12 +62,11 @@ def resolve_abc_prop(cls):
     for class_obj in cls.__mro__:
         for key, value in class_obj.__dict__.items():
             if isinstance(value, property):
-                if getattr(object, "__isabstractmethod__", False):
+                if getattr(value, "__isabstractmethod__", False):
                     abstract_prop[key] = value
 
                 else:
                     non_abstract_prop[key] = value
-
 
     def gen_get_set_properties():
         """
