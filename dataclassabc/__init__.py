@@ -62,15 +62,12 @@ def resolve_abc_prop(cls):
     for class_obj in cls.__mro__:
         for key, value in class_obj.__dict__.items():
             if isinstance(value, property):
-                if not hasattr(value, "__isabstractmethod__") or not getattr(
-                    value, "__isabstractmethod__"
-                ):
+                if getattr(object, "__isabstractmethod__", False):
+                    abstract_prop[key] = value
+
+                else:
                     non_abstract_prop[key] = value
 
-                elif hasattr(value, "__isabstractmethod__") and getattr(
-                    value, "__isabstractmethod__"
-                ):
-                    abstract_prop[key] = value
 
     def gen_get_set_properties():
         """
@@ -224,7 +221,9 @@ def dataclassabc(
                         isinstance(field.default, property)
                         and field.default.__isabstractmethod__
                     ):
-                        # override default value
+                        # Override default value of the dataclass field.
+                        # This ensures a TypeError is raised if the argument is not provided during initialzation,
+                        # rather than silently defaulting to the reference to the abstract method.
                         field.default = _MISSING
 
             def gen_generic():
@@ -245,8 +244,7 @@ def dataclassabc(
         if slots:
             return decorated_cls
 
-        # Create a property for each abstract property that is implemented by a 
-        # dataclass field
+        # Create a property for each abstract property that is implemented by a dataclass field
         return resolve_abc_prop(decorated_cls)
 
     if _cls is None:
