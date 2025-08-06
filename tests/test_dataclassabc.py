@@ -1,11 +1,10 @@
 import unittest
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import FrozenInstanceError, dataclass
 
-from dataclassabc import resolve_abc_prop
+from dataclassabc import dataclassabc
 
-
-class TestResolveABCProp(unittest.TestCase):
+class TestDataclassABC(unittest.TestCase):
     def test_frozen_dataclass(self):
         class A(ABC):
             @property
@@ -13,14 +12,15 @@ class TestResolveABCProp(unittest.TestCase):
             def val1(self) -> int:
                 ...
 
-        @resolve_abc_prop
-        @dataclass(frozen=True)
+        @dataclassabc(frozen=True)
         class B(A):
             val1: int
 
         b = B(val1=1)
 
         self.assertEqual(1, b.val1)
+        with self.assertRaises(FrozenInstanceError):
+            b.val1 = 2
 
     def test_non_frozen_dataclass(self):
         class A(ABC):
@@ -35,8 +35,7 @@ class TestResolveABCProp(unittest.TestCase):
             def val1(self, value: int):
                 ...
 
-        @resolve_abc_prop
-        @dataclass
+        @dataclassabc
         class B(A):
             val1: int
 
@@ -55,8 +54,7 @@ class TestResolveABCProp(unittest.TestCase):
                 return 1
 
         with self.assertRaisesRegex(AttributeError, 'field "val1" shadows non-abstract property "val1"') as exc:
-            @resolve_abc_prop
-            @dataclass
+            @dataclassabc
             class B(A):
                 val1: int
 
@@ -65,8 +63,7 @@ class TestResolveABCProp(unittest.TestCase):
             def val1(self) -> int:
                 return 1
 
-        @resolve_abc_prop
-        @dataclass
+        @dataclassabc
         class B(A):
             val1: int
 

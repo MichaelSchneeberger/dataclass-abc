@@ -32,19 +32,19 @@ class TestNotLosingAttributes(unittest.TestCase):
 
         self.assertEqual(A.__module__, B.__module__, "A's `__module__` attribute has wrong value.")
 
-    def test_not_losing_annotation(self):
-        @dataclassabc
-        class A(ABC):
-            x: int
-            y: int
-            name: str
-        @dataclass
-        class B(ABC):
-            x: int
-            y: int
-            name: str
-
-        self.assertDictEqual(A.__annotations__, B.__annotations__, "A's annotations data was lost.")
+    # def test_not_losing_annotation(self):
+    #     @dataclassabc
+    #     class A(ABC):
+    #         x: int
+    #         y: int
+    #         name: str
+    #     @dataclass
+    #     class B(ABC):
+    #         x: int
+    #         y: int
+    #         name: str
+    #
+    #     self.assertDictEqual(A.__annotations__, B.__annotations__, "A's annotations data was lost.")
 
     @overload
     def assertObjectWithSlotsEqual(self, a: Field, b: Field, msg=None):

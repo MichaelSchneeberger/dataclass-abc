@@ -1,4 +1,3 @@
-import sys
 import functools
 from dataclasses import (
     _FIELD,  # type: ignore
@@ -7,6 +6,7 @@ from dataclasses import (
     Field as _Field,
     field as _field,
     dataclass as _dataclass,
+    fields as _fields,
 )
 import types
 from typing import Generic, TypeVar, Type, Callable, get_origin
@@ -149,17 +149,7 @@ def dataclassabc(
 def dataclassabc(
     _cls=None,
     /,
-    *,
-    init=True,
-    repr=True,
-    eq=True,
-    order=False,
-    unsafe_hash=False,
-    frozen=False,
-    match_args=True,
-    kw_only=False,
-    slots=False,
-    weakref_slot=False,
+    **kwargs,
 ):
     """
     A decorator that transforms an abstract class into a dataclass, resolving abstract properties that are
@@ -181,38 +171,9 @@ def dataclassabc(
 
     def wrap(cls):
 
-        def inner_dataclass(inner_cls, init):
-            if sys.version_info >= (3, 11):
-                return _dataclass(
-                    init=init,
-                    repr=repr,
-                    eq=eq,
-                    order=order,
-                    unsafe_hash=unsafe_hash,
-                    frozen=frozen,
-                    match_args=match_args,
-                    kw_only=kw_only,
-                    slots=slots,
-                    weakref_slot=weakref_slot,
-                )(inner_cls)
-            else:
-                return _dataclass(
-                    init=init,
-                    repr=repr,
-                    eq=eq,
-                    order=order,
-                    unsafe_hash=unsafe_hash,
-                    frozen=frozen,
-                    match_args=match_args,
-                    kw_only=kw_only,
-                    slots=slots,
-                )(inner_cls)
+        decorated_cls = _dataclass(frozen=kwargs.get('frozen', False))(cls)
 
-        # create dataclass without init method to avoid "non-default argument 
-        # follows default argument" error
-        decorated_cls = inner_dataclass(cls, init=False)
-
-        if init:
+        if kwargs.get('init', True):
             fields = decorated_cls.__dataclass_fields__
             for field in fields.values():
                 if field._field_type in (_FIELD, _FIELD_INITVAR):
@@ -221,7 +182,7 @@ def dataclassabc(
                         and field.default.__isabstractmethod__
                     ):
                         # Override default value of the dataclass field.
-                        # This ensures a TypeError is raised if the argument is not provided during initialzation,
+                        # This ensures a TypeError is raised if some argument is not provided during initialzation,
                         # rather than silently defaulting to the reference to the abstract method.
                         field.default = _MISSING
 
@@ -230,17 +191,16 @@ def dataclassabc(
                     if get_origin(base) is Generic:
                         yield base
 
-            # create new class with empty dunder methods (__repr__, __setattr__, etc.)
-            #   to avoid triggering dataclass's exception
             cls_no_init = types.new_class(
                 cls.__name__,
                 (decorated_cls,) + tuple(gen_generic()),
                 {},
             )
-            cls_no_init = functools.update_wrapper(cls_no_init, cls, updated=())
-            decorated_cls = inner_dataclass(cls_no_init, init=True)
+            assigned = ('__module__', '__name__', '__qualname__', '__doc__', '__type_params__')
+            cls_no_init = functools.update_wrapper(cls_no_init, cls, assigned=assigned, updated=())
+            decorated_cls = _dataclass(**kwargs | {'init': True})(cls_no_init)
 
-        if slots:
+        if kwargs.get('slots', False):
             return decorated_cls
 
         # Create a property for each abstract property that is implemented by a dataclass field
