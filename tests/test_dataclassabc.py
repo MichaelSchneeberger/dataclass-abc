@@ -1,11 +1,10 @@
 import unittest
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
-from dataclassabc import resolve_abc_prop
+from dataclassabc import dataclassabc
 
 
-class TestResolveABCProp(unittest.TestCase):
+class TestDataclassABC(unittest.TestCase):
     def test_frozen_dataclass(self):
         class A(ABC):
             @property
@@ -13,8 +12,7 @@ class TestResolveABCProp(unittest.TestCase):
             def val1(self) -> int:
                 ...
 
-        @resolve_abc_prop
-        @dataclass(frozen=True)
+        @dataclassabc(frozen=True)
         class B(A):
             val1: int
 
@@ -35,8 +33,7 @@ class TestResolveABCProp(unittest.TestCase):
             def val1(self, value: int):
                 ...
 
-        @resolve_abc_prop
-        @dataclass
+        @dataclassabc
         class B(A):
             val1: int
 
@@ -55,8 +52,7 @@ class TestResolveABCProp(unittest.TestCase):
                 return 1
 
         with self.assertRaisesRegex(AttributeError, 'field "val1" shadows non-abstract property "val1"') as exc:
-            @resolve_abc_prop
-            @dataclass
+            @dataclassabc
             class B(A):
                 val1: int
 
@@ -65,8 +61,7 @@ class TestResolveABCProp(unittest.TestCase):
             def val1(self) -> int:
                 return 1
 
-        @resolve_abc_prop
-        @dataclass
+        @dataclassabc
         class B(A):
             val1: int
 
@@ -79,11 +74,24 @@ class TestResolveABCProp(unittest.TestCase):
             def val1(self) -> int:
                 return 1
 
-        @resolve_abc_prop
-        @dataclass(slots=True)
+        @dataclassabc(slots=True)
         class B(A):
             val1: int
 
         b = B(val1=2)
+
+        self.assertEqual(2, b.val1)
+
+    def test_multiple_fields(self):
+        class A:
+            def val1(self) -> int:
+                return 1
+
+        @dataclassabc
+        class B(A):
+            val1: int
+            val2: int
+
+        b = B(val1=2, val2=3)
 
         self.assertEqual(2, b.val1)

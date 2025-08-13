@@ -6,7 +6,7 @@ from dataclasses import (
     field as _field,
     dataclass as _dataclass,
 )
-from typing import Generic, TypeVar, Type, Callable
+from typing import TypeVar, Type, Callable
 
 # ensures compatibility with Python 3.10
 from typing_extensions import (
@@ -55,57 +55,46 @@ def resolve_abc_prop(cls):
 
     non_abstract_prop = {}
     abstract_prop = {}
+    class_objects = {}
 
     for class_obj in cls.__mro__:
-        for key, value in class_obj.__dict__.items():
-            if isinstance(value, property):
-                if not hasattr(value, "__isabstractmethod__") or not getattr(
-                    value, "__isabstractmethod__"
-                ):
-                    non_abstract_prop[key] = value
+        for key, object in class_obj.__dict__.items():
+            if isinstance(object, property):
+                if getattr(object, "__isabstractmethod__", False):
+                    abstract_prop[key] = object
+                    class_objects[key] = class_obj
+                else:
+                    non_abstract_prop[key] = object
 
-                elif hasattr(value, "__isabstractmethod__") and getattr(
-                    value, "__isabstractmethod__"
-                ):
-                    abstract_prop[key] = value
+    prop_overrides = set()
 
-    def gen_get_set_properties():
-        """
-        For each matching dataclass field and abstract property pair, create a getter and setter method.
-        """
+    for class_obj in cls.__mro__:
+        if "__dataclass_fields__" in class_obj.__dict__:
+            for key, _ in class_obj.__dict__["__dataclass_fields__"].items():
+                if key in abstract_prop:
+                    # def get_func(self, key=key):
+                    #     return self.__dict__[f"__{key}"]
 
-        for class_obj in cls.__mro__:
-            if "__dataclass_fields__" in class_obj.__dict__:
-                for key, _ in class_obj.__dict__["__dataclass_fields__"].items():
-                    if key in abstract_prop:
+                    # def set_func(self, val, key=key):
+                    #     self.__dict__[f"__{key}"] = val
 
-                        def get_func(self, key=key):
-                            return getattr(self, f"__{key}")
+                    # setattr(cls, key, property(get_func, set_func))
 
-                        def set_func(self, val, key=key):
-                            return setattr(self, f"__{key}", val)
+                    # remove the abstract method
+                    delattr(class_objects[key], key)
+                    prop_overrides.add(key)
 
-                        yield key, property(get_func, set_func)
+                elif key in non_abstract_prop:
+                    raise AttributeError(
+                        f'field "{key}" shadows non-abstract property "{key}", '
+                        f'either turn property "{key}" to an abstract property '
+                        f'or rename the field "{key}".'
+                    )
+    
+    if prop_overrides:
+        cls.__abstractmethods__ -= prop_overrides
 
-                    elif key in non_abstract_prop:
-                        raise AttributeError(
-                            f'field "{key}" shadows non-abstract property "{key}", '
-                            f'either turn property "{key}" to an abstract property '
-                            f'or rename the field "{key}".'
-                        )
-
-    get_set_properties = dict(gen_get_set_properties())
-
-    # filter out Generic classes
-    mro_filtered = tuple(mro for mro in cls.__mro__ if mro is not Generic)
-
-    new_cls = type(
-        cls.__name__,
-        mro_filtered,
-        {**cls.__dict__, **get_set_properties},
-    )
-
-    return new_cls
+    return cls
 
 
 @_overload
@@ -173,30 +162,36 @@ def dataclassabc(
 
     def wrap(cls):
 
-        # create dataclass without init method to prevent "non-default argument follows default argument" error
-        decorated_cls = _dataclass()(cls)
-
         if kwargs.get('init', True):
-            fields = decorated_cls.__dataclass_fields__
-            for field in fields.values():
-                if field._field_type in (_FIELD, _FIELD_INITVAR):
-                    if (
-                        isinstance(field.default, property)
-                        and field.default.__isabstractmethod__
-                    ):
-                        # Override default value of the dataclass field.
-                        # This ensures a TypeError is raised if the argument is not provided during initialzation,
-                        # rather than silently defaulting to the reference to the abstract method.
-                        field.default = _MISSING
+            # create dataclass without init method to prevent "non-default argument follows default argument" error
+            # decorated_cls = _dataclass(init=False)(cls)
+            decorated_cls = resolve_abc_prop(cls)
 
-            decorated_cls = _dataclass(**kwargs | {'init': True})(decorated_cls)
+            # fields = decorated_cls.__dataclass_fields__
+            # for field in fields.values():
+            #     if field._field_type in (_FIELD, _FIELD_INITVAR):
+            #         if isinstance(field.default, property) and field.default.__isabstractmethod__:
+            #             # Override default value of the dataclass field.
+            #             # This ensures a TypeError is raised if the argument is not provided during initialzation,
+            #             # rather than silently defaulting to the reference to the abstract method.
+            #             field.default = _MISSING
 
-        if kwargs.get('slots', True):
-            return decorated_cls
+        else:
+            decorated_cls = cls
+
+        # print(decorated_cls.__dataclass_fields__)
+
+        # print(getattr(decorated_cls, 'val1'))
+
+        decorated_cls = _dataclass(**kwargs)(decorated_cls)
+
+        # if kwargs.get('slots', False):
+        #     return decorated_cls
 
         # Create a property for each abstract property that is implemented by a 
         # dataclass field
-        return resolve_abc_prop(decorated_cls)
+        # return resolve_abc_prop(decorated_cls)
+        return decorated_cls
 
     if _cls is None:
         return wrap
