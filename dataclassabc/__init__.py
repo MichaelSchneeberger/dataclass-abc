@@ -170,9 +170,17 @@ def dataclassabc(
     """
 
     def wrap(cls):
-        decorated_cls = _dataclass(frozen=kwargs.get("frozen", False), init=False)(cls)
-
         if kwargs.get("init", True):
+            # Abstract properties defined in the super class are used as field default values by dataclass decorator.
+            # This results in undesired default arguments in the __init__ function and "non-default argument
+            # follows default argument" error.
+            # To avoid this, a minimal dataclass (using init=False) is first created to retrieve the fields.
+            decorated_cls = _dataclass(frozen=kwargs.get("frozen", False), init=False)(
+                cls
+            )
+            # decorated_cls = _dataclass(init=False)(cls)
+            # decorated_cls = _dataclass(frozen=kwargs.get("frozen", False))(cls)
+
             fields = decorated_cls.__dataclass_fields__
             for field in fields.values():
                 if field._field_type in (_FIELD, _FIELD_INITVAR):
@@ -205,7 +213,10 @@ def dataclassabc(
             cls_no_init = functools.update_wrapper(
                 cls_no_init, cls, assigned=assigned, updated=()
             )
-            decorated_cls = _dataclass(**kwargs | {"init": True})(cls_no_init)
+            decorated_cls = _dataclass(**kwargs)(cls_no_init)
+
+        else:
+            decorated_cls = cls
 
         if kwargs.get("slots", False):
             return decorated_cls
