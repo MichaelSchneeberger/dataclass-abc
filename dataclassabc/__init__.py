@@ -170,10 +170,9 @@ def dataclassabc(
     """
 
     def wrap(cls):
+        decorated_cls = _dataclass(frozen=kwargs.get("frozen", False), init=False)(cls)
 
-        decorated_cls = _dataclass(frozen=kwargs.get('frozen', False))(cls)
-
-        if kwargs.get('init', True):
+        if kwargs.get("init", True):
             fields = decorated_cls.__dataclass_fields__
             for field in fields.values():
                 if field._field_type in (_FIELD, _FIELD_INITVAR):
@@ -187,7 +186,7 @@ def dataclassabc(
                         field.default = _MISSING
 
             def gen_generic():
-                for base in getattr(decorated_cls, '__orig_bases__', ()):
+                for base in getattr(decorated_cls, "__orig_bases__", ()):
                     if get_origin(base) is Generic:
                         yield base
 
@@ -196,11 +195,19 @@ def dataclassabc(
                 (decorated_cls,) + tuple(gen_generic()),
                 {},
             )
-            assigned = ('__module__', '__name__', '__qualname__', '__doc__', '__type_params__')
-            cls_no_init = functools.update_wrapper(cls_no_init, cls, assigned=assigned, updated=())
-            decorated_cls = _dataclass(**kwargs | {'init': True})(cls_no_init)
+            assigned = (
+                "__module__",
+                "__name__",
+                "__qualname__",
+                "__doc__",
+                "__type_params__",
+            )
+            cls_no_init = functools.update_wrapper(
+                cls_no_init, cls, assigned=assigned, updated=()
+            )
+            decorated_cls = _dataclass(**kwargs | {"init": True})(cls_no_init)
 
-        if kwargs.get('slots', False):
+        if kwargs.get("slots", False):
             return decorated_cls
 
         # Create a property for each abstract property that is implemented by a dataclass field
