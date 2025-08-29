@@ -76,6 +76,17 @@ class B(A):
 ```
 
 
+## Pyright
+
+A `reportIncompatibleMethodOverride` error is raised when using `dataclassabc` with a newer version of *pyright*.
+To avoid this, create the file `pyrightconfig.json` and include:
+
+```json
+{
+    "reportIncompatibleMethodOverride": false,
+}
+```
+
 
 ## Comparison with the standard `dataclass`
 

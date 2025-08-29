@@ -1,6 +1,6 @@
 import unittest
 from abc import ABC, abstractmethod
-from dataclasses import FrozenInstanceError, dataclass
+from dataclasses import FrozenInstanceError
 
 from dataclassabc import dataclassabc
 
